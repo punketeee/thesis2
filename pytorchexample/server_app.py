@@ -30,7 +30,6 @@ def main(grid: Grid, context: Context) -> None:
     strategy = QIFedAvg(
     fraction_train=context.run_config.get("fraction-train", 0.5),
     fraction_evaluate=fraction_evaluate,
-    qi_step=context.run_config.get("qi-step", 0.05),
     qi_out_dir=context.run_config.get("qi-out-dir", "qi_logs"),
 )
 

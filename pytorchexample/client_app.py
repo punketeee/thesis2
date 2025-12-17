@@ -24,6 +24,28 @@ def train(msg: Message, context: Context):
 
     # Load the data
     partition_id = context.node_config["partition-id"]
+    """
+    attacker_enabled_global = bool(context.run_config.get("attacker-enabled", False))
+    attacker_id = int(context.run_config.get("attacker-id", -1))  # e.g. 0
+    flip_prob = float(context.run_config.get("flip-prob", 0.2))    # 0.2 = 20% label flip
+    attack_seed = int(context.run_config.get("attack-seed", 123))
+
+    is_attacker = (partition_id == attacker_id)
+    attack_enabled = attacker_enabled_global and is_attacker
+    """
+
+    partition_id = context.node_config["partition-id"]
+
+    attacker_enabled = bool(context.run_config.get("attacker-enabled", False))
+    attacker_id = int(context.run_config.get("attacker-id", -1))
+    flip_prob = float(context.run_config.get("flip-prob", 0.2))
+    attack_seed = int(context.run_config.get("attack-seed", 123))
+
+    attack_enabled = attacker_enabled and (partition_id == attacker_id)
+
+    print(f"[client {partition_id}] attack_enabled={attack_enabled}, flip_prob={flip_prob}")
+
+
     num_partitions = context.node_config["num-partitions"]
     batch_size = context.run_config["batch-size"]
    # trainloader, _ = load_data(partition_id, num_partitions, batch_size)
@@ -36,20 +58,36 @@ def train(msg: Message, context: Context):
         seed=context.run_config.get("partition-seed", 42),
     )
 
-    # Call the training function
+    # Call the training function 
+    """
     train_loss = train_fn(
         model,
         trainloader,
         context.run_config["local-epochs"],
         msg.content["config"]["lr"],
         device,
-    )
+    ) 
+    """
+
+    train_loss = train_fn(
+    model,
+    trainloader,
+    context.run_config["local-epochs"],
+    msg.content["config"]["lr"],
+    device,
+    attack_enabled=attack_enabled,
+    flip_prob=flip_prob,
+    seed=attack_seed,
+    client_id=partition_id,
+)
+
 
     # Construct and return reply Message
     model_record = ArrayRecord(model.state_dict())
     metrics = {
         "train_loss": train_loss,
         "num-examples": len(trainloader.dataset),
+        "partition-id": partition_id,
     }
     metric_record = MetricRecord(metrics)
     content = RecordDict({"arrays": model_record, "metrics": metric_record})

@@ -94,8 +94,12 @@ def run_offline_qi(
 ) -> None:
     qi_path = Path(qi_dir)
 
+    node_id_map_path = qi_path / "node_id_map.json"
+    node_id_map = _load_json(node_id_map_path) if node_id_map_path.exists() else {}
+
     contrib_raw = _load_json(qi_path / "contributors.json")
     metrics = _load_json(qi_path / "global_metrics.json")
+
 
     # Parse contributors: JSON keys are strings -> int
     contributors: Dict[int, List[int]] = {int(k): v for k, v in contrib_raw.items()}
