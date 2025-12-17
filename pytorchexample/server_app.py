@@ -4,6 +4,7 @@ import torch
 from flwr.app import ArrayRecord, ConfigRecord, Context, MetricRecord
 from flwr.serverapp import Grid, ServerApp
 from flwr.serverapp.strategy import FedAvg
+from pytorchexample.qi_fedavg import QIFedAvg
 
 from pytorchexample.task import Net, load_centralized_dataset, test
 
@@ -25,7 +26,13 @@ def main(grid: Grid, context: Context) -> None:
     arrays = ArrayRecord(global_model.state_dict())
 
     # Initialize FedAvg strategy
-    strategy = FedAvg(fraction_evaluate=fraction_evaluate)
+   # strategy = FedAvg(fraction_evaluate=fraction_evaluate)
+    strategy = QIFedAvg(
+    fraction_train=context.run_config.get("fraction-train", 0.5),
+    fraction_evaluate=fraction_evaluate,
+    qi_step=context.run_config.get("qi-step", 0.05),
+    qi_out_dir=context.run_config.get("qi-out-dir", "qi_logs"),
+)
 
     # Start strategy, run FedAvg for `num_rounds`
     result = strategy.start(

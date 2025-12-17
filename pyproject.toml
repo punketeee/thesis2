@@ -25,11 +25,15 @@ serverapp = "pytorchexample.server_app:app"
 clientapp = "pytorchexample.client_app:app"
 
 [tool.flwr.app.config]
-num-server-rounds = 3
+num-server-rounds = 5
 fraction-evaluate = 0.5
+fraction-train = 0.5
 local-epochs = 1
 learning-rate = 0.1
 batch-size = 32
+qi-step = 0.05
+qi-out-dir = "qi_logs"
+
 
 [tool.flwr.federations]
 default = "local-simulation"
