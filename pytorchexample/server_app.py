@@ -5,6 +5,8 @@ from flwr.app import ArrayRecord, ConfigRecord, Context, MetricRecord
 from flwr.serverapp import Grid, ServerApp
 from flwr.serverapp.strategy import FedAvg, MultiKrum
 from pytorchexample.qi_fedavg import QIFedAvg
+from pytorchexample.gtg_fedavg import GTGFedAvg
+
 
 from pytorchexample.task import Net, load_centralized_dataset, test
 
@@ -56,6 +58,17 @@ def main(grid: Grid, context: Context) -> None:
             num_malicious_nodes=num_mal,
             num_nodes_to_select=1,  # => classical Krum :contentReference[oaicite:1]{index=1}
         )
+
+    elif strategy_name in ["gtg", "gtg-fedavg", "gtgshapley"]:
+        strategy = GTGFedAvg(
+            fraction_train=context.run_config.get("fraction-train", 0.5),
+            fraction_evaluate=fraction_evaluate,
+            gtg_out_dir=context.run_config.get("gtg-out-dir", "gtg_logs"),
+            min_train_nodes=context.run_config.get("min-train-nodes", 2),
+            min_available_nodes=context.run_config.get("min-available-nodes", 2),
+            min_evaluate_nodes=context.run_config.get("min-evaluate-nodes", 0),
+        )
+
 
     else:
         strategy = FedAvg(

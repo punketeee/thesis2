@@ -27,7 +27,7 @@ clientapp = "pytorchexample.client_app:app"
 [tool.flwr.app.config]
 num-server-rounds = 5
 fraction-evaluate = 0  #normalde ikisi de 0.5 ama debug icin degistiriyom
-fraction-train = 1.0 #0.4 generally, 1.0 for krum
+fraction-train = 1.0 #0.4 generally, 1.0 for krum and gtg
 local-epochs = 1
 learning-rate = 0.1
 batch-size = 32
@@ -36,15 +36,17 @@ qi-out-dir = "qi_logs_dirichlet" #change name for different setups
 non-iid = false
 dirichlet-alpha = 0.5
 partition-seed = 42
-attacker-enabled = true
+attacker-enabled = false
 attacker-id = 0        # with 5 clients, 1 attacker = 20% 
 flip-prob = 0.2     # 20% of labels flipped
 attack-seed = 123         # reproducible
-strategy = "krum"     # "fedavg" or "fedprox" or "krum" , if krum, fraction-train must be 1.0, min train/min available nodes =5, num-malicious nodes=1
+strategy = "gtg"     # "fedavg" or "fedprox" or "krum" or "gtg", if krum, fraction-train must be 1.0, min train/min available nodes =5, num-malicious nodes=1
 fedprox-mu = 0.01 
 min-train-nodes = 5
 min-available-nodes = 5
 num-malicious-nodes = 1
+gtg-out-dir = "gtg_logs"
+
 
 
 
