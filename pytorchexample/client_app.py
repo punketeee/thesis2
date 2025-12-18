@@ -73,6 +73,9 @@ def train(msg: Message, context: Context):
     ) 
     """
 
+    print(f"[client {partition_id}] attacker_id={attacker_id} attack_enabled={attack_enabled}")
+
+
     train_loss = train_fn(
     model,
     trainloader,
@@ -95,6 +98,7 @@ def train(msg: Message, context: Context):
         "train_loss": train_loss,
         "num-examples": len(trainloader.dataset),
         "partition-id": partition_id,
+        "is-attacker": int(attack_enabled),
     }
     metric_record = MetricRecord(metrics)
     content = RecordDict({"arrays": model_record, "metrics": metric_record})

@@ -3,10 +3,11 @@
 import torch
 from flwr.app import ArrayRecord, ConfigRecord, Context, MetricRecord
 from flwr.serverapp import Grid, ServerApp
-from flwr.serverapp.strategy import FedAvg
+from flwr.serverapp.strategy import FedAvg, MultiKrum
 from pytorchexample.qi_fedavg import QIFedAvg
 
 from pytorchexample.task import Net, load_centralized_dataset, test
+
 
 # Create ServerApp
 app = ServerApp()
@@ -27,11 +28,44 @@ def main(grid: Grid, context: Context) -> None:
 
     # Initialize FedAvg strategy
    # strategy = FedAvg(fraction_evaluate=fraction_evaluate)
-    strategy = QIFedAvg(
-    fraction_train=context.run_config.get("fraction-train", 0.5),
-    fraction_evaluate=fraction_evaluate,
-    qi_out_dir=context.run_config.get("qi-out-dir", "qi_logs"),
-)
+   # strategy = QIFedAvg(
+   # fraction_train=context.run_config.get("fraction-train", 0.5),
+   # fraction_evaluate=fraction_evaluate,
+   # qi_out_dir=context.run_config.get("qi-out-dir", "qi_logs"),
+#)
+
+    strategy_name = str(context.run_config.get("strategy", "fedavg")).lower()
+
+    if strategy_name in ["qi", "qi-fedavg", "qifedavg"]:
+        strategy = QIFedAvg(
+            fraction_train=context.run_config.get("fraction-train", 0.5),
+            fraction_evaluate=fraction_evaluate,
+            qi_out_dir=context.run_config.get("qi-out-dir", "qi_logs"),
+        )
+
+    elif strategy_name in ["krum", "multikrum"]:
+        # IMPORTANT: Krum needs enough clients *per round*.
+        # With 5 total clients and 1 attacker, sample ALL 5 each round.
+        num_mal = int(context.run_config.get("num-malicious-nodes", 1))
+        strategy = MultiKrum(
+            fraction_train=1.0,
+            min_train_nodes=context.run_config.get("min-train-nodes", 5),
+            min_available_nodes=context.run_config.get("min-available-nodes", 5),
+            fraction_evaluate=fraction_evaluate,
+            min_evaluate_nodes=context.run_config.get("min-evaluate-nodes", 0),
+            num_malicious_nodes=num_mal,
+            num_nodes_to_select=1,  # => classical Krum :contentReference[oaicite:1]{index=1}
+        )
+
+    else:
+        strategy = FedAvg(
+            fraction_train=context.run_config.get("fraction-train", 0.5),
+            fraction_evaluate=fraction_evaluate,
+            min_train_nodes=context.run_config.get("min-train-nodes", 2),
+            min_available_nodes=context.run_config.get("min-available-nodes", 2),
+            min_evaluate_nodes=context.run_config.get("min-evaluate-nodes", 0),
+        )
+
 
     # Start strategy, run FedAvg for `num_rounds`
     result = strategy.start(
