@@ -33,13 +33,16 @@ learning-rate = 0.1
 batch-size = 32
 qi-step = 0.05
 qi-out-dir = "qi_logs_dirichlet" #change name for different setups
-non-iid = true
+non-iid = false
 dirichlet-alpha = 0.5
 partition-seed = 42
 attacker-enabled = false
 attacker-id = 0        # with 5 clients, 1 attacker = 20% 
 flip-prob = 0.2     # 20% of labels flipped
 attack-seed = 123         # reproducible
+strategy = "fedavg"     # "fedavg" or "fedprox"
+fedprox-mu = 0.01 
+
 
 
 [tool.flwr.federations]

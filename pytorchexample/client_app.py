@@ -19,21 +19,11 @@ def train(msg: Message, context: Context):
     # Load the model and initialize it with the received weights
     model = Net()
     model.load_state_dict(msg.content["arrays"].to_torch_state_dict())
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model.to(device)
+
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #model.to(device)
 
     # Load the data
-    partition_id = context.node_config["partition-id"]
-    """
-    attacker_enabled_global = bool(context.run_config.get("attacker-enabled", False))
-    attacker_id = int(context.run_config.get("attacker-id", -1))  # e.g. 0
-    flip_prob = float(context.run_config.get("flip-prob", 0.2))    # 0.2 = 20% label flip
-    attack_seed = int(context.run_config.get("attack-seed", 123))
-
-    is_attacker = (partition_id == attacker_id)
-    attack_enabled = attacker_enabled_global and is_attacker
-    """
-
     partition_id = context.node_config["partition-id"]
 
     attacker_enabled = bool(context.run_config.get("attacker-enabled", False))
@@ -45,6 +35,20 @@ def train(msg: Message, context: Context):
 
     print(f"[client {partition_id}] attack_enabled={attack_enabled}, flip_prob={flip_prob}")
 
+    strategy = str(context.run_config.get("strategy", "fedavg")).lower()
+    use_fedprox = (strategy == "fedprox")
+    fedprox_mu = float(context.run_config.get("fedprox-mu", 0.0))
+    #print(f"[client {partition_id}] strategy={strategy} fedprox_mu={fedprox_mu}")
+
+
+    global_params = None
+   # if strategy == "fedprox":
+    if use_fedprox and fedprox_mu > 0.0:
+    # snapshot of the GLOBAL weights (before local training)
+        global_params = [p.detach().clone() for p in model.parameters()]
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model.to(device)
 
     num_partitions = context.node_config["num-partitions"]
     batch_size = context.run_config["batch-size"]
@@ -79,6 +83,9 @@ def train(msg: Message, context: Context):
     flip_prob=flip_prob,
     seed=attack_seed,
     client_id=partition_id,
+    use_fedprox=use_fedprox,
+    fedprox_mu=fedprox_mu,
+    global_params=global_params,
 )
 
 
@@ -103,6 +110,9 @@ def evaluate(msg: Message, context: Context):
     model.load_state_dict(msg.content["arrays"].to_torch_state_dict())
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
+
+    # Snapshot of global params at round start (FedProx anchor)
+    global_params = [p.detach().clone() for p in model.parameters()]
 
     # Load the data
     partition_id = context.node_config["partition-id"]

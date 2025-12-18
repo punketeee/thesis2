@@ -107,8 +107,8 @@ def load_data(
     partition = fds.load_partition(partition_id)
     # Divide data on each node: 80% train, 20% test
     partition_train_test = partition.train_test_split(test_size=0.2, seed=seed)
-
-    _print_label_stats_once(partition_id, partition_train_test["train"], prefix="[DATA] ")
+    #validating non iid dist
+    # _print_label_stats_once(partition_id, partition_train_test["train"], prefix="[DATA] ")
     # Construct dataloaders
     partition_train_test = partition_train_test.with_transform(apply_transforms)
     trainloader = DataLoader(
@@ -161,7 +161,11 @@ def train(net, trainloader, epochs, lr, device):
 ): """
 
 def train(net, trainloader, epochs, lr, device,
-          attack_enabled=False, flip_prob=0.2, num_classes=10, seed=123, client_id=0):
+          attack_enabled=False, flip_prob=0.2, num_classes=10, seed=123, client_id=0, 
+          use_fedprox: bool = False,
+        fedprox_mu: float = 0.0,
+        global_params=None,  # list[Tensor] captured at round start
+):
 
     net.to(device)
     criterion = torch.nn.CrossEntropyLoss().to(device)
@@ -193,6 +197,15 @@ def train(net, trainloader, epochs, lr, device,
 
             optimizer.zero_grad()
             loss = criterion(net(images), labels)
+         
+
+            # --- FedProx proximal term ---
+            if use_fedprox and fedprox_mu > 0.0 and global_params is not None:
+                prox = 0.0
+                for p, g in zip(net.parameters(), global_params):
+                    prox = prox + torch.sum((p - g.to(p.device)) ** 2)
+                loss = loss + 0.5 * float(fedprox_mu) * prox
+
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
