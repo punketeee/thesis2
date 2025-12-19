@@ -1,0 +1,9 @@
+{
+  "strategy": "qi_gtg",
+  "fraction-train": 1.0,
+  "attacker-enabled": false,
+  "non-iid": false,
+  "partition-seed": 7,
+  "qi-out-dir": "results\\qi_vs_gtg\\seed_07\\qi",
+  "gtg-out-dir": "results\\qi_vs_gtg\\seed_07\\gtg"
+}

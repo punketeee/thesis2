@@ -1,0 +1,27 @@
+{
+  "round": 7,
+  "utility_prev_round": 1.9961838888216623,
+  "utility_current_global": 1.9961735085596013,
+  "num_clients": 5,
+  "client_weights_num_examples": [
+    8000.0,
+    8000.0,
+    8000.0,
+    8000.0,
+    8000.0
+  ],
+  "shapley_all": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.0,
+    "4": 0.0
+  },
+  "shapley_best_subset": {
+    "0": 0.0,
+    "1": 0.0,
+    "2": 0.0,
+    "3": 0.0,
+    "4": 0.0
+  }
+}

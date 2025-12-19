@@ -6,6 +6,10 @@ from flwr.serverapp import Grid, ServerApp
 from flwr.serverapp.strategy import FedAvg, MultiKrum
 from pytorchexample.qi_fedavg import QIFedAvg
 from pytorchexample.gtg_fedavg import GTGFedAvg
+from pytorchexample.qi_gtg_fedavg import QIAndGTGFedAvg
+from pytorchexample.qi_krum import QIMultiKrum
+
+
 
 
 from pytorchexample.task import Net, load_centralized_dataset, test
@@ -45,19 +49,32 @@ def main(grid: Grid, context: Context) -> None:
             qi_out_dir=context.run_config.get("qi-out-dir", "qi_logs"),
         )
 
+#    elif strategy_name in ["krum", "multikrum"]:
+#        # IMPORTANT: Krum needs enough clients *per round*.
+#        # With 5 total clients and 1 attacker, sample ALL 5 each round.
+#        num_mal = int(context.run_config.get("num-malicious-nodes", 1))
+#        strategy = MultiKrum(
+#            fraction_train=1.0,
+#            min_available_nodes=context.run_config.get("min-available-nodes", 5),
+#            fraction_evaluate=fraction_evaluate,
+#            min_evaluate_nodes=context.run_config.get("min-evaluate-nodes", 0),
+#            num_malicious_nodes=num_mal,
+#            num_nodes_to_select=1,  # => classical Krum :contentReference[oaicite:1]{index=1}
+#        )
+
     elif strategy_name in ["krum", "multikrum"]:
-        # IMPORTANT: Krum needs enough clients *per round*.
-        # With 5 total clients and 1 attacker, sample ALL 5 each round.
         num_mal = int(context.run_config.get("num-malicious-nodes", 1))
-        strategy = MultiKrum(
-            fraction_train=1.0,
+        strategy = QIMultiKrum(
+            qi_out_dir=context.run_config.get("qi-out-dir", "qi_logs"),
+            fraction_train=context.run_config.get("fraction-train", 1.0),
             min_train_nodes=context.run_config.get("min-train-nodes", 5),
             min_available_nodes=context.run_config.get("min-available-nodes", 5),
             fraction_evaluate=fraction_evaluate,
             min_evaluate_nodes=context.run_config.get("min-evaluate-nodes", 0),
             num_malicious_nodes=num_mal,
-            num_nodes_to_select=1,  # => classical Krum :contentReference[oaicite:1]{index=1}
+            num_nodes_to_select=1,
         )
+
 
     elif strategy_name in ["gtg", "gtg-fedavg", "gtgshapley"]:
         strategy = GTGFedAvg(
@@ -68,6 +85,18 @@ def main(grid: Grid, context: Context) -> None:
             min_available_nodes=context.run_config.get("min-available-nodes", 2),
             min_evaluate_nodes=context.run_config.get("min-evaluate-nodes", 0),
         )
+
+    elif strategy_name in ["qi_gtg", "qi+gtg", "compare"]:
+        strategy = QIAndGTGFedAvg(
+            fraction_train=context.run_config.get("fraction-train", 0.5),
+            fraction_evaluate=fraction_evaluate,
+            qi_out_dir=context.run_config.get("qi-out-dir", "qi_logs"),
+            gtg_out_dir=context.run_config.get("gtg-out-dir", "gtg_logs"),
+            min_train_nodes=context.run_config.get("min-train-nodes", 2),
+            min_available_nodes=context.run_config.get("min-available-nodes", 2),
+            min_evaluate_nodes=context.run_config.get("min-evaluate-nodes", 0),
+        )
+
 
 
     else:

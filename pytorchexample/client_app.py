@@ -36,8 +36,9 @@ def train(msg: Message, context: Context):
     print(f"[client {partition_id}] attack_enabled={attack_enabled}, flip_prob={flip_prob}")
 
     strategy = str(context.run_config.get("strategy", "fedavg")).lower()
-    use_fedprox = (strategy == "fedprox")
+    #use_fedprox = (strategy == "fedprox")
     fedprox_mu = float(context.run_config.get("fedprox-mu", 0.0))
+    use_fedprox = fedprox_mu > 0.0
     #print(f"[client {partition_id}] strategy={strategy} fedprox_mu={fedprox_mu}")
 
 

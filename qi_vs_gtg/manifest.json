@@ -1,0 +1,8 @@
+{
+  "seeds": 10,
+  "strategy": "qi_gtg",
+  "non_iid": false,
+  "fraction_train": 1.0,
+  "attacker_enabled": false,
+  "cwd": "C:\\Users\\azrav\\thesis2\\quickstart-pytorch"
+}
